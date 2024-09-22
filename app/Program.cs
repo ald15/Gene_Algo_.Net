@@ -19,7 +19,7 @@ double[,] data =
 
 TSPConfig config = new();
 
-config.Epochs = 10000;
+config.Epochs = -1;
 
 Solver newSolver = new(12, data, config);
 newSolver.Solve();

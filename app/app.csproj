@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\lib\lib.csproj" />
+    <PackageReference Include="GeneAlgoPack" Version="0.1.2409.22" />
   </ItemGroup>
 
   <PropertyGroup>
