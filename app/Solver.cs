@@ -98,8 +98,8 @@ public class Solver
     }
     void PrintBest(IEntity path, IEntity best)
     {
-        string curMsg = ">>> {current} \n\t[G: " + path.Generation + "]\nScore = " + path.FScore; 
-        string bestMsg = "\n    {best} \n\t[G:" + best.Generation + "]\nScore = " + best.FScore; 
+        string curMsg = ">>> {current} \n\t[G: " + path.Generation + "] Score = " + path.FScore; 
+        string bestMsg = "\n    {best} \n\t[G:" + best.Generation + "] Score = " + best.FScore; 
         if (toShowDetails)
         {
             curMsg = ">>> {current}\n    \t" + path;
