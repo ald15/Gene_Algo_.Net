@@ -100,7 +100,6 @@ public class TSPSolver : IGeneAlgo
         int processorCount = Environment.ProcessorCount;
         int lengthBase = population.Length / processorCount;
         int length_n = lengthBase + (population.Length % processorCount);
-        //Console.WriteLine("P:" + population.Length  +"; Lb: " + lengthBase + "; l_n:" + length_n);
         var tasks = new Task[processorCount];
         for (int i = 0; i < processorCount; i++)
         {
@@ -108,7 +107,6 @@ public class TSPSolver : IGeneAlgo
             tasks[i] = Task.Factory.StartNew(() =>
             {
                 int lengthCurrent = (index == processorCount - 1) ? length_n : lengthBase;
-                //Console.WriteLine((index * lengthBase).ToString() + " " + ((index * lengthBase) + lengthCurrent).ToString());
                 for(long j = 0; j < lengthCurrent; j++)
                 {
                     IEntity entity = population[index * lengthBase + j];

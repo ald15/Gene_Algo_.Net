@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WpfApp"
+        xmlns:local="clr-namespace:WpfApp" xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
         Title="Генетический алгоритм by ald15" Height="690" Width="1100" MinHeight="690" MinWidth="1100">
 
@@ -18,34 +18,33 @@
             <ColumnDefinition Width="237*"/>
         </Grid.ColumnDefinitions>
 
-        <GroupBox Header="Эволюция" Grid.Column="3" Margin="5,10,10,10" VerticalAlignment="Top" Height="630">
+        <GroupBox Header="Эволюция" Grid.Column="3" Margin="5,10,10,10">
             <StackPanel Grid.Column="1">
                 <Label Content="Визуализация лучшей особи" HorizontalAlignment="Center"/>
                 <Canvas x:Name="Plot" Margin="10,0,10,0" Background="#FFEFECEC" MinHeight="400" MinWidth="400" SizeChanged="Plot_SizeChanged" RenderTransformOrigin="0.5,0.5"/>
                 <Label Content="Лучшая особь" Margin="10,0,10,0" HorizontalAlignment="Center"/>
-                <TextBox TextWrapping="NoWrap"  Margin="5,10,5,5" Height="88" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" Text="{Binding Best, Mode=TwoWay, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox TextWrapping="Wrap"  Margin="5,10,5,5" Height="88" VerticalScrollBarVisibility="Visible" Text="{Binding Best, Mode=TwoWay, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}" TextChanged="TextBox_TextChanged" />
                 <Label Content="Прогресc эволюции" Margin="10,0,10,0" HorizontalAlignment="Center"/>
-                <ProgressBar Height="22" Margin="10,0,10,0" Value="50"/>
+                <ProgressBar Height="22" Margin="10,0,10,0" Value="{Binding StatusBarValue, Mode=TwoWay}"/>
             </StackPanel>
         </GroupBox>
 
         <GroupBox Header="Параметры эволюции" Margin="10,10,5,0" Height="406" VerticalAlignment="Top">
             <StackPanel Margin="0,10,0,0">
                 <Label Content="Количество городов" Margin="0,0,5,0"/>
-                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding NodesAmount, Mode=TwoWay}"/>
+                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding NodesAmount, Mode=TwoWay}" Name="tbNodesAmount"/>
                 <Label Content="Количество эпох*" Margin="0,0,5,0"/>
-                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding Epochs, Mode=TwoWay}"/>
+                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding Epochs, Mode=TwoWay}" Name="tbNodesEpochs"/>
                 <Label Content="Размер популяции**" Margin="0,0,5,0"/>
-                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding PopulationSize, Mode=TwoWay}"/>
+                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding PopulationSize, Mode=TwoWay}" Name="tbPopulationSize"/>
                 <Label Content="Вероятность мутации" Margin="0,0,5,0"/>
-                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding MutationProbability, Mode=TwoWay}"/>
+                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding MutationProbability, Mode=TwoWay}" Name="tbMutationProbability"/>
                 <Label Content="Вероятность скрещивания" Margin="0,0,5,0"/>
-                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding CrossoverProbability, Mode=TwoWay}"/>
+                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding CrossoverProbability, Mode=TwoWay}" Name="tbCrossoverProbability"/>
                 <Label Content="Часть выживших" Margin="0,0,5,0"/>
-                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding SurvivorsPart, Mode=TwoWay}"/>
-                <CheckBox Content="Визуализация пути" Margin="5,10,5,0" IsChecked="True"/>
-                <CheckBox Content="Многопоточность" Margin="5,10,5,0" IsChecked="True"/>
-                <TextBlock TextWrapping="Wrap" Text="* Для бесконечного процесса: -1" Margin="5,10,5,0"/>
+                <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="{Binding SurvivorsPart, Mode=TwoWay}" Name="tbSurvivorsPart"/>
+                <CheckBox Content="Визуализация пути" Margin="5,10,5,0" IsChecked="{Binding Visualization, Mode=TwoWay}" Click="CheckBoxVisualization_Click" />
+                <TextBlock TextWrapping="Wrap" Text="* Для бесконечного процесса: -1" Margin="5,20,5,0"/>
                 <TextBlock TextWrapping="Wrap" Text="** Количество особей" Margin="5,10,5,0"/>
             </StackPanel>
         </GroupBox>
@@ -54,28 +53,27 @@
                 <TextBox TextWrapping="NoWrap"  Margin="5,10,5,5" Height="155" Name="tbMatrix" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" Text="{Binding Matrix, Mode=TwoWay, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}" />
                 <Label Content="Максимальная длина пути"/>
                 <TextBox TextWrapping="Wrap" Margin="5,0,5,5" Text="{Binding MaxDistance, Mode=TwoWay}"/>
-                <Button Content="Сгенерировать" Margin="5,5,5,5" VerticalAlignment="Bottom" Click="ButtonGen_Click"/>
+                <Button Content="Сгенерировать" Margin="5,5,5,5" VerticalAlignment="Bottom" Name="btGen" Click="ButtonGen_Click"/>
             </StackPanel>
         </GroupBox>
         <GroupBox Header="Управление" Margin="5,10,5,0" Grid.Column="2" Height="124" VerticalAlignment="Top">
             <StackPanel VerticalAlignment="Center">
-                <Button Content="Старт" Margin="5,5,5,0" Click="ButtonStart_Click"/>
-                <Button Content="Стоп" Margin="5,5,5,0"/>
-                <Button Content="Пауза" Margin="5,5,5,0"/>
+                <Button Content="Старт" Margin="5,5,5,0" Click="ButtonStart_Click" Name="btStart" Height="30"/>
+                <Button Content="Стоп" Margin="5,5,5,0" Click="ButtonStop_Click" Height="30"/>
 
             </StackPanel>
         </GroupBox>
         <GroupBox Header="Статус" Margin="5,10,5,0" Grid.Column="1" Height="124" VerticalAlignment="Top">
             <StackPanel>
                 <Label Content="Время" Margin="0,0,5,0"/>
-                <TextBox TextWrapping="Wrap" Text="TextBox" Margin="5,0,5,0"/>
+                <TextBox TextWrapping="Wrap" Text="0" Margin="5,0,5,0" IsEnabled="False"/>
                 <Label Content="Текущая эпоха" Margin="0,0,5,0"/>
-                <TextBox TextWrapping="Wrap" Text="TextBox" Margin="5,0,5,0"/>
+                <TextBox TextWrapping="Wrap" Text="{Binding CurEpoch, Mode=TwoWay}" Margin="5,0,5,0" IsEnabled="False"/>
             </StackPanel>
         </GroupBox>
 
         <GroupBox Header="Статистика" Margin="10,429,5,10" Grid.ColumnSpan="3">
-
+            <oxy:PlotView x:Name="PlotView"/>
         </GroupBox>
 
     </Grid>
