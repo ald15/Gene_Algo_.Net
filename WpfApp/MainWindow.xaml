@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApp" xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
-        Title="Генетический алгоритм by ald15" Height="690" Width="1100" MinHeight="690" MinWidth="1100">
+        Title="Генетический алгоритм by ald15" Height="950" Width="1100" MinHeight="690" MinWidth="1100">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -21,12 +21,26 @@
         <GroupBox Header="Эволюция" Grid.Column="3" Margin="5,10,10,10">
             <StackPanel Grid.Column="1">
                 <Label Content="Визуализация лучшей особи" HorizontalAlignment="Center"/>
-                <Canvas x:Name="Plot" Margin="10,0,10,0" Background="#FFEFECEC" MinHeight="400" MinWidth="400" SizeChanged="Plot_SizeChanged" RenderTransformOrigin="0.5,0.5"/>
+                <Canvas x:Name="Plot" Margin="10,0,10,0" Background="#FFEFECEC" MinHeight="400" MinWidth="400" SizeChanged="Plot_SizeChanged" RenderTransformOrigin="0.5,0.5" Height="340"/>
                 <Label Content="Лучшая особь" Margin="10,0,10,0" HorizontalAlignment="Center"/>
                 <TextBox TextWrapping="Wrap"  Margin="5,10,5,5" Height="88" VerticalScrollBarVisibility="Visible" Text="{Binding Best, Mode=TwoWay, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}" TextChanged="TextBox_TextChanged" />
                 <Label Content="Прогресc эволюции" Margin="10,0,10,0" HorizontalAlignment="Center"/>
                 <ProgressBar Height="22" Margin="10,0,10,0" Value="{Binding StatusBarValue, Mode=TwoWay}"/>
+
+                <GroupBox Header="Эксперимент" Margin="5,20,5,10" VerticalAlignment="Bottom">
+                    <StackPanel>
+                        <Label Content="Название" Margin="0,0,5,0"/>
+                        <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="exp_" Name="tbDbTitle"/>
+                        <Button Content="Сохранить" Margin="5,5,5,5" VerticalAlignment="Bottom" Name="btDbSave" Click="btDbSave_Click"/>
+                        <Separator Height="10"/>
+                        <ListBox Height="65" Margin="5,0,5,0" d:ItemsSource="{d:SampleData ItemCount=3}" Name="lbDbList" SelectionChanged="lbDbList_SelectionChanged" IsSynchronizedWithCurrentItem="False" SelectedIndex="0"/>
+                        <Button Content="Загрузить" Margin="5,5,5,5" VerticalAlignment="Bottom" Name="btDbLoad" Click="btDbLoad_Click"/>
+                        <Button Content="Удалить" Margin="5,5,5,5" VerticalAlignment="Bottom" Name="btDbDelete"/>
+                    </StackPanel>
+                </GroupBox>
+
             </StackPanel>
+
         </GroupBox>
 
         <GroupBox Header="Параметры эволюции" Margin="10,10,5,0" Height="406" VerticalAlignment="Top">
@@ -75,6 +89,5 @@
         <GroupBox Header="Статистика" Margin="10,429,5,10" Grid.ColumnSpan="3">
             <oxy:PlotView x:Name="PlotView"/>
         </GroupBox>
-
     </Grid>
 </Window>
