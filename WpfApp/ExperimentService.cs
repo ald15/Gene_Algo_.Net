@@ -11,17 +11,15 @@ namespace WpfApp
 {
     public class ExperimentService
     {
-        public async Task SaveExperiment(string title, int nodesAmount, TSPConfig config, string best, TSPPath bestPath, string matrix, string population)
+        public async Task SaveExperiment(string title, int nodesAmount, TSPConfig config, string best,
+            TSPPath bestPath, string matrix, string population)
         {
 
-
-
-
-
             using var context = new ExperimentContext();
-
+            Debug.WriteLine($"getPopSize: {config.PopulationSize}");
             var experiment = new Experiment
             {
+                
                 Title = title,
                 NodeaAmount = nodesAmount,
                 Epochs = config.Epochs,
@@ -30,6 +28,7 @@ namespace WpfApp
                 CrossoverProbability = config.CrossoverProbability,
                 SurvivorsPart = config.SurvivorsPart,
                 Best = best,
+                BestPath = JSONConverter.TSPPathToJson(bestPath),
                 BestFScore = bestPath.FScore,
                 Matrix = matrix,
                 Population = population

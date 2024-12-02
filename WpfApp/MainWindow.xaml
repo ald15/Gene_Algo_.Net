@@ -33,9 +33,8 @@
                         <TextBox TextWrapping="Wrap" Margin="5,0,5,0" Text="exp_" Name="tbDbTitle"/>
                         <Button Content="Сохранить" Margin="5,5,5,5" VerticalAlignment="Bottom" Name="btDbSave" Click="btDbSave_Click"/>
                         <Separator Height="10"/>
-                        <ListBox Height="65" Margin="5,0,5,0" d:ItemsSource="{d:SampleData ItemCount=3}" Name="lbDbList" SelectionChanged="lbDbList_SelectionChanged" IsSynchronizedWithCurrentItem="False" SelectedIndex="0"/>
+                        <ListBox Height="65" Margin="5,0,5,0" d:ItemsSource="{d:SampleData ItemCount=3}" Name="lbDbList" SelectionChanged="lbDbList_SelectionChanged" IsSynchronizedWithCurrentItem="False" SelectedIndex="0" MouseDoubleClick="lbDbList_SelectionChanged"/>
                         <Button Content="Загрузить" Margin="5,5,5,5" VerticalAlignment="Bottom" Name="btDbLoad" Click="btDbLoad_Click"/>
-                        <Button Content="Удалить" Margin="5,5,5,5" VerticalAlignment="Bottom" Name="btDbDelete"/>
                     </StackPanel>
                 </GroupBox>
 
@@ -66,7 +65,7 @@
             <StackPanel>
                 <TextBox TextWrapping="NoWrap"  Margin="5,10,5,5" Height="155" Name="tbMatrix" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" Text="{Binding Matrix, Mode=TwoWay, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}" />
                 <Label Content="Максимальная длина пути"/>
-                <TextBox TextWrapping="Wrap" Margin="5,0,5,5" Text="{Binding MaxDistance, Mode=TwoWay}"/>
+                <TextBox TextWrapping="Wrap" Margin="5,0,5,5" Text="{Binding MaxDistance, Mode=TwoWay}" Name="tbMaxDistance"/>
                 <Button Content="Сгенерировать" Margin="5,5,5,5" VerticalAlignment="Bottom" Name="btGen" Click="ButtonGen_Click"/>
             </StackPanel>
         </GroupBox>

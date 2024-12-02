@@ -14,6 +14,8 @@ using OxyPlot.Series;
 using OxyPlot;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Collections.Generic;
 
 namespace WpfApp
 {
@@ -21,42 +23,6 @@ namespace WpfApp
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     /// 
-
-    public class Experiment
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public int NodeaAmount { get; set; }
-        public long Epochs { get; set; }
-        public long PopulationSize { get; set; }
-        public double MutationProbability { get; set; }
-        public double CrossoverProbability { get; set; }
-        public double SurvivorsPart { get; set; }
-        public string Best { get; set; } = string.Empty;
-        public double BestFScore { get; set; }
-        public string Matrix { get; set; } = string.Empty;
-        public string Population { get; set; } = string.Empty;
-
-        // TODO
-        // Здесь нужно добавить сохранение лучшей популяции -> написать функцию перевода IEntyty Popolutaion -> strting JSON
-        // Соответсвенно, string JSON -> IEntyty Popolutaion
-    }
-
-    public class ExperimentContext : DbContext
-    {
-        public DbSet<Experiment> Experiments { get; set; }
-
-        public ExperimentContext()
-        {
-            Database.EnsureCreated();
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=ExperimentDB;Trusted_Connection=True;");
-        }
-    }
-
 
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
@@ -93,6 +59,7 @@ namespace WpfApp
         int processorCount;
         TSPSolver[] solvers;
         TSPPath bestPath;
+        IEntity[] bestPopulation;
 
         // OxyPlot
 
@@ -108,6 +75,7 @@ namespace WpfApp
         {
             set
             {
+                int last = NodesAmount;
                 bool success = int.TryParse(value.ToString(), out nodesAmount);
                 ButtonGen_Click(null, null);
             }
@@ -127,8 +95,30 @@ namespace WpfApp
         {
             set
             {
+                long last = bestPopulation.Length;
                 bool success = long.TryParse(value.ToString(), out populationSize);
+
                 if (success) config.PopulationSize = populationSize;
+                TSPPath[] temp = new TSPPath[populationSize];
+                if (last > populationSize)
+                {
+                    Array.Copy(bestPopulation, temp, populationSize);
+                    bestPopulation = temp;
+                }
+                else if (last < populationSize)
+                {
+                    Array.Copy(bestPopulation, temp, bestPopulation.Length);
+                    for (int i = bestPopulation.Length; i < populationSize; i++)
+                    {
+                        temp[i] = new TSPPath(nodesAmount - 1);
+                        IEntity tmpE = (IEntity)temp[i];
+                        IWorld tmpW = new TSPMatrix(ref matrix);
+                        TSPPath.Fitness(ref tmpE, ref tmpW);
+                        temp[i] = (TSPPath)tmpE;
+                    }
+                    bestPopulation = temp;
+                }
+
                 OnPropertyChanged(nameof(PopulationSize));
             }
             get => populationSize;
@@ -173,10 +163,7 @@ namespace WpfApp
         }
         public string Matrix
         {
-            set 
-            {
-                //OnPropertyChanged(nameof(Matrix));
-            }
+            set { }
             get
             {
                 string s = "", row = "";
@@ -260,7 +247,7 @@ namespace WpfApp
             
             processorCount = Environment.ProcessorCount;
             solvers = new TSPSolver[processorCount];
-            best = string.Empty;
+            
 
             for (int i = 0; i < processorCount; i++)
             {
@@ -268,6 +255,9 @@ namespace WpfApp
             }
 
             bestPath = (TSPPath)solvers[0].Best;
+            best = string.Empty;
+            bestPopulation = (TSPPath[]) solvers[0].Population;
+
             epochs = config.Epochs;
             populationSize = config.PopulationSize;
             mutationProbability = config.MutationProbability;
@@ -349,11 +339,15 @@ namespace WpfApp
         private void ButtonGen_Click(object sender, RoutedEventArgs e)
         {
             matrix = TSPMatrix.Generate(nodesAmount, (int) MaxDistance);
-            OnPropertyChanged(nameof(Matrix));
+            
             for (int i = 0; i < processorCount; i++)
             {
                 solvers[i] = new TSPSolver(nodesAmount, matrix, config);
             }
+            bestPopulation = (TSPPath[]) solvers[0].Population;
+            bestPath = (TSPPath)solvers[0].Best;
+            best = string.Empty;
+            OnPropertyChanged(nameof(Matrix));
             drawNodes();
         }
         private async void ButtonStart_Click(object sender, RoutedEventArgs e)
@@ -364,7 +358,10 @@ namespace WpfApp
             btGen.IsEnabled = false;
             btDbSave.IsEnabled = false;
             btDbLoad.IsEnabled = false;
-            btDbDelete.IsEnabled = false;
+            lbDbList.IsEnabled = false;
+            tbDbTitle.IsEnabled = false;
+            tbMaxDistance.IsEnabled = false;
+            
             tbNodesAmount.IsEnabled = tbNodesEpochs.IsEnabled = tbPopulationSize.IsEnabled =
                 tbMutationProbability.IsEnabled = tbCrossoverProbability.IsEnabled = tbSurvivorsPart.IsEnabled = false;
             dataPoints.Clear();
@@ -386,7 +383,10 @@ namespace WpfApp
                 btGen.IsEnabled = true;
                 btDbSave.IsEnabled = true;
                 btDbLoad.IsEnabled = true;
-                btDbDelete.IsEnabled = true;
+                lbDbList.IsEnabled = true;
+                tbDbTitle.IsEnabled = true;
+                tbMaxDistance.IsEnabled = true;
+                
                 tbNodesAmount.IsEnabled = tbNodesEpochs.IsEnabled = tbPopulationSize.IsEnabled =
                     tbMutationProbability.IsEnabled = tbCrossoverProbability.IsEnabled = tbSurvivorsPart.IsEnabled = true;
                 timerOxy.Stop();
@@ -411,14 +411,15 @@ namespace WpfApp
                         }
 
                         await Task.WhenAll(tasks);
-                        double max = 0;
-                        bestPath = (TSPPath) solvers[0].Best;
+   
+                        bestPopulation = solvers[0].Population;
                         for (int j = 0; j < processorCount; j++)
                         {
-                            if (solvers[j].Best.FScore > max)
+                            if (solvers[j].Best.FScore < bestPath.FScore && solvers[j].Best.FScore > 0)
                             {
                                 best = ((TSPPath) solvers[j].Best).ToString();
                                 bestPath = (TSPPath) solvers[j].Best;
+                                bestPopulation = solvers[j].Population;
                             }
                         }
                         OnPropertyChanged(nameof(Best));
@@ -445,10 +446,10 @@ namespace WpfApp
 
         private async void btDbSave_Click(object sender, RoutedEventArgs e)
         {
-            // Сохранение результатов в БД
             string title = tbDbTitle.Text;
-            await _experimentService.SaveExperiment(title, nodesAmount, config, best, bestPath, "", "");
-            Debug.WriteLine("Результаты сохранены в базу данных.");
+            await _experimentService.SaveExperiment(title, nodesAmount, config, bestPath.ToString(), bestPath,
+                JSONConverter.MatrixToJson(matrix), JSONConverter.PopulationToJson((TSPPath[])bestPopulation));
+            //Debug.WriteLine("Результаты сохранены в базу данных.");
         }
 
         private void btDbLoad_Click(object sender, RoutedEventArgs e)
@@ -457,44 +458,78 @@ namespace WpfApp
             var experiments = context.Experiments.ToList();
             lbDbList.ItemsSource = experiments.Select(exp => $"#: {exp.Id}, Title: {exp.Title}, Score: {exp.BestFScore}");
         }
-
-        private void lbDbList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void DBgetData()
         {
             using var context = new ExperimentContext();
             var experiments = context.Experiments.ToList();
             var experimentFromDb = context.Experiments.FirstOrDefault(x => x.Id == lbDbList.SelectedIndex + 1);
-            Debug.WriteLine($"Selected index: {lbDbList.SelectedIndex}");
-                if (experimentFromDb != null)
+            if (experimentFromDb != null)
+            {
+                tbDbTitle.Text = experimentFromDb.Title;
+
+                Epochs = experimentFromDb.Epochs;
+                config.Epochs = experimentFromDb.Epochs;
+
+                
+
+                MutationProbability = experimentFromDb.MutationProbability;
+                config.MutationProbability = experimentFromDb.MutationProbability;
+
+                CrossoverProbability = experimentFromDb.CrossoverProbability;
+                config.CrossoverProbability = experimentFromDb.CrossoverProbability;
+
+                SurvivorsPart = experimentFromDb.SurvivorsPart;
+                config.SurvivorsPart = experimentFromDb.SurvivorsPart;
+
+                nodesAmount = experimentFromDb.NodeaAmount;
+
+
+                matrix = JSONConverter.JsonToMatrix(experimentFromDb.Matrix);
+
+                bestPath = JSONConverter.JsonToTSPPath(experimentFromDb.BestPath);
+
+                Best = bestPath.ToString();
+
+
+                bestPopulation = JSONConverter.JsonToPopulation(experimentFromDb.Population);
+
+                PopulationSize = experimentFromDb.PopulationSize;
+                config.PopulationSize = experimentFromDb.PopulationSize;
+
+
+                for (int i = 0; i < processorCount; i++)
                 {
-                    // Загрузка данных из записи
-                    tbDbTitle.Text = experimentFromDb.Title;
-                    
-                    
-
-                    Epochs = experimentFromDb.Epochs;
-                    config.Epochs = experimentFromDb.Epochs;
-
-                    nodesAmount = experimentFromDb.NodeaAmount;
-                    OnPropertyChanged(nameof(NodesAmount));
-                    drawNodes();
-
-                    PopulationSize = experimentFromDb.PopulationSize;
-                    config.PopulationSize = experimentFromDb.PopulationSize;
-
-                    MutationProbability = experimentFromDb.MutationProbability;
-                    config.MutationProbability = experimentFromDb.MutationProbability;
-
-                    CrossoverProbability = experimentFromDb.CrossoverProbability;
-                    config.CrossoverProbability = experimentFromDb.CrossoverProbability;
-
-                    SurvivorsPart = experimentFromDb.SurvivorsPart;
-                    config.SurvivorsPart = experimentFromDb.SurvivorsPart;
-
-                    
-                    
-                    //Best = experimentFromDb.Best;
-                    //BestFScore = bestPath.FScore
+                    solvers[i] = new TSPSolver(nodesAmount, matrix, config, bestPopulation);
                 }
+
+                OnPropertyChanged(nameof(Matrix));
+                tbNodesAmount.Text = nodesAmount.ToString();
+                OnPropertyChanged(nameof(NodesAmount));
+                OnPropertyChanged(nameof(Best));
+                Plot_SizeChanged(null, null);
+
+                fitnessSeries.Points.Clear();
+
+            }
+        }
+        private void lbDbList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+          DBgetData();
+        }
+
+        private void lbDbList_SelectionChanged(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            DBgetData();
+        }
+
+        private void btDbDelete_Click(object sender, RoutedEventArgs e)
+        {
+            using var context = new ExperimentContext();
+            var experiments = context.Experiments.ToList();
+            var experimentFromDb = context.Experiments.FirstOrDefault(x => x.Id == lbDbList.SelectedIndex + 1);
+            experiments.Remove(experimentFromDb);
+            context.SaveChanges();
+            lbDbList.Items.Remove(lbDbList.Items[lbDbList.SelectedIndex]);
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)

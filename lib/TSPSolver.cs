@@ -63,6 +63,9 @@ public class TSPSolver : IGeneAlgo
         for (long i = start; i < end; i++)
         {
             population[i] = (IEntity)(new TSPPath(n - 1, generation));
+            IEntity entity = population[i];
+            TSPPath.Fitness(ref entity, ref matrix);
+            population[i] = entity;
         }
         if (start < end)
         {
@@ -71,8 +74,8 @@ public class TSPSolver : IGeneAlgo
     }
     public IEntity Selection()
     {
-        TSPConfig? Config = config as TSPConfig; 
-        Array.Sort(population);
+        TSPConfig? Config = config as TSPConfig;
+        QSort.QuickSort(population, 0, population.Length - 1);
         if (population[0].FScore < best.FScore)
         {
             best = new TSPPath((TSPPath) population[0]);
@@ -87,6 +90,7 @@ public class TSPSolver : IGeneAlgo
         for(long j = 0; j < population.Length; j++)
         {
             IEntity entity = population[j];
+            TSPPath.Fitness(ref entity, ref matrix);
             TSPPath.Mutate(ref entity, Config.MutationProbability);
             TSPPath.Fitness(ref entity, ref matrix);
             population[j] = entity;
